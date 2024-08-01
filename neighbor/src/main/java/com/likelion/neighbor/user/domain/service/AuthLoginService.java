@@ -1,110 +1,188 @@
 package com.likelion.neighbor.user.domain.service;
 
-import java.net.URI;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import com.google.gson.Gson;
-import com.likelion.neighbor.global.dto.Token;
-import com.likelion.neighbor.global.dto.UserInfo;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.likelion.neighbor.global.exception.model.BaseResponse;
+import com.likelion.neighbor.global.exception.model.Error;
+import com.likelion.neighbor.global.exception.model.Success;
 import com.likelion.neighbor.global.jwt.TokenProvider;
+import com.likelion.neighbor.insurance.service.InsuranceDamoaService;
 import com.likelion.neighbor.user.domain.Role;
+import com.likelion.neighbor.user.domain.Status;
 import com.likelion.neighbor.user.domain.User;
+import com.likelion.neighbor.user.domain.controller.dto.request.DamoaSignUpDto;
+import com.likelion.neighbor.user.domain.controller.dto.request.SignUpRequestDto;
+import com.likelion.neighbor.user.domain.controller.dto.request.TwoWayRequestDto;
+import com.likelion.neighbor.user.domain.controller.dto.response.NeedToSecondaryDto;
 import com.likelion.neighbor.user.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthLoginService {
 
-	@Value("${client-id}")
-	private String GOOGLE_CLIENT_ID;
 
-	@Value("${client-secret}")
-	private String GOOGLE_CLIENT_SECRET;
-
-	private final String GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
-
-	private final String GOOGLE_REDIRECT_URL = "http://localhost:8080/login/oauth2/code/google";
+	private final String SIGN_UP_URL = "https://development.codef.io/v1/kr/insurance/0001/credit4u/register";
 
 	private final UserRepository userRepository;
+	private final InsuranceDamoaService insuranceDamoaService;
 	private final TokenProvider tokenProvider;
+	private final PasswordEncoder passwordEncoder;
 
-	// public void socialLogin(String code, String registrationId){
-	// 	System.out.println("code = " + code);
-	// 	System.out.println("registrationId = "+ registrationId);
-	// }
 
-	public String getGoogleAccessToken(String code){
-		RestTemplate restTemplate = new RestTemplate();
-		Map<String, String> params = Map.of(
-			"code", code,
-			"scope", "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
-			"client_id", GOOGLE_CLIENT_ID,
-			"client_secret", GOOGLE_CLIENT_SECRET,
-			"redirect_uri", GOOGLE_REDIRECT_URL,
-			"grant_type", "authorization_code"
-		);
 
-		ResponseEntity<String> responseEntity =  restTemplate.postForEntity(GOOGLE_TOKEN_URL, params, String.class);
-		if (responseEntity.getStatusCode().is2xxSuccessful()){
-			String json = responseEntity.getBody();
-			Gson gson = new Gson();
+	@Transactional
+	public BaseResponse<?> signUp(String token, DamoaSignUpDto signUpRequestDto) throws UnsupportedEncodingException, JsonProcessingException {
 
-			// json 응답을 token 객체로 변환하여 엑세스토큰 변환
-			return gson.fromJson(json, Token.class)
-				.getAccessToken();
-		}
-		throw new RuntimeException("구글 엑세스 토큰을 가져오는데 실패.");
+		 NeedToSecondaryDto signUpSuccess = signUpForDamoaService(token, signUpRequestDto);
+		 if (signUpSuccess.result().code().equals("CF-03002")){
+			 return BaseResponse.success(Success., signUpSuccess.data());
+		 }
+		 if (signUpSuccess!=null){ // 회원가입 2차인증을 이미 완료하고 요청하는 경우.
+			 User user = createUser(signUpRequestDto);
+			 return BaseResponse.success(Success.MEMBER_SAVE_SUCCESS,tokenProvider.createToken(user));
+		 }
+		 return BaseResponse.error(Error.INTERNAL_SERVER_ERROR, "회원가입 도중 예기치 못한 에러가 발생.");
 	}
-	public Token loginOrSignup(String googleAccessToken){
-		UserInfo userInfo = getUserInfo(googleAccessToken);
+	@Transactional
+	public BaseResponse<?> twoWaySignUp(String token, DamoaSignUpDto twoWayRequestDto) throws UnsupportedEncodingException, JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
 
-		if(!userInfo.getVerifiedEmail()){
-			throw new RuntimeException("이메일 인증이 되지않은 유저.");
+		Map<String, Object> encryptedPasswordAndIdentityAndPrivateKeyByRSA = getEncryptedData(twoWayRequestDto);
+		if (encryptedPasswordAndIdentityAndPrivateKeyByRSA.isEmpty()){
+			return null;
 		}
-		// 유저가 존재 x 새로 생성해서 저장.
+		SignUpRequestDto encryptSignUpDto = createSignUpRequestDto(encryptedPasswordAndIdentityAndPrivateKeyByRSA, twoWayRequestDto, Status.TWO_WAY);
 
-		User user = userRepository.findByEmail(userInfo.getEmail()).orElseGet(
-			() -> userRepository.save(User.builder()
-				.email(userInfo.getEmail())
-				.name(userInfo.getName())
-				.pictureUrl(userInfo.getPictureUrl())
-				.role(Role.ROLE_USER)
-				.build()));
-		System.out.println(user.getId());
+		String encodedData = encodeRequestBody(encryptSignUpDto);
 
-		return tokenProvider.createToken(user);
+		// POST 요청 전송
+		ResponseEntity<String> response = sendSignUpRequest(token,encodedData);
+		String decodedResponse = URLDecoder.decode(response.getBody(), "UTF-8");
+
+		NeedToSecondaryDto jsonNode = objectMapper.readValue(decodedResponse, NeedToSecondaryDto.class);
+		System.out.println(jsonNode);
+		if (jsonNode.result().code().equals("CF-01004")){
+			BaseResponse.error(Error.REQUEST_TIME_OUT_ERROR, Error.REQUEST_TIME_OUT_ERROR.getMessage());
+		}
+		if(jsonNode.result().code().equals("CF-12069")){
+			BaseResponse.error(Error.EXIST_USER_ERROR, Error.EXIST_USER_ERROR.getMessage());
+		}
+		return BaseResponse.success(Success.MEMBER_SAVE_SUCCESS, jsonNode.data());
+	}
+
+	public NeedToSecondaryDto signUpForDamoaService(String token, DamoaSignUpDto damoaSignUpDto) throws UnsupportedEncodingException, JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+
+		Map<String, Object> encryptedPasswordAndIdentityAndPrivateKeyByRSA = getEncryptedData(damoaSignUpDto);
+		if (encryptedPasswordAndIdentityAndPrivateKeyByRSA.isEmpty()){
+			return null;
+		}
+		SignUpRequestDto encryptSignUpDto = createSignUpRequestDto(encryptedPasswordAndIdentityAndPrivateKeyByRSA, damoaSignUpDto, Status.FIRST_REQUEST);
+
+		String encodedData = encodeRequestBody(encryptSignUpDto);
+		// POST 요청 전송
+		ResponseEntity<String> response = sendSignUpRequest(token, encodedData) ;
+
+		String decodedResponse = URLDecoder.decode(response.getBody(), "UTF-8");
+
+		NeedToSecondaryDto jsonNode = objectMapper.readValue(decodedResponse, NeedToSecondaryDto.class);
+		System.out.println(jsonNode);
+		if (jsonNode.data().continue2Way()){
+			return jsonNode;
+		}
+		return null;
 
 	}
-	public UserInfo getUserInfo(String googleAccessToken){
-		RestTemplate restTemplate = new RestTemplate();
-		String url = "https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + googleAccessToken;
+	private SignUpRequestDto createSignUpRequestDto(Map<String, Object> encryptedData, DamoaSignUpDto damoaSignUpDto, Status status) {
+		SignUpRequestDto.SignUpRequestDtoBuilder builder = SignUpRequestDto.builder()
+			.organization("0001")
+			.id(damoaSignUpDto.id())
+			.password((String) encryptedData.get("encryptedPassword"))
+			.type("0") // 0이면 sms인증, pass인증.
+			.userName(damoaSignUpDto.userName())
+			.identity((String) encryptedData.get("identity"))
+			.birthDate(damoaSignUpDto.birthDate())
+			.identityEncYn("Y")
+			.phoneNo(damoaSignUpDto.phoneNo())
+			.telecom(damoaSignUpDto.telecom());
 
+		switch (status) {
+			case TWO_WAY -> {
+				builder.is2Way(true)
+					.email(damoaSignUpDto.email())
+					.smsAuthNo(damoaSignUpDto.smsAuthNo())
+					.twoWayInfo(damoaSignUpDto.twoWayInfo());
+			}
+			case FIRST_REQUEST -> {
+				// 첫 번째 요청에 대한 추가 설정이 필요하면 여기에 추가
+							builder.email(damoaSignUpDto.email());
+
+			}
+		}
+		return builder.build();
+	}
+
+	private String encodeRequestBody(SignUpRequestDto signUpRequestDto) {
+		try {
+			String jsonRequestBody = new ObjectMapper().writeValueAsString(signUpRequestDto);
+			return URLEncoder.encode(jsonRequestBody, "UTF-8");
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to convert DTO to JSON", e);
+		}
+	}
+
+	private Map<String, Object> getEncryptedData(DamoaSignUpDto twoWayRequestDto) {
+		try {
+			return insuranceDamoaService.getEncryptedPasswordByRSA(twoWayRequestDto.password(), twoWayRequestDto.identity());
+		} catch (Exception e) {
+			log.error("Error while encrypting data: {}", e.getMessage());
+			return null;
+		}
+	}
+
+	private ResponseEntity<String> sendSignUpRequest(String token, String encodedRequestBody) {
 		HttpHeaders headers = new HttpHeaders();
-		headers.set("Authorization", "Bearer " + googleAccessToken);
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.set("Content-Type", "application/x-www-form-urlencoded");
+		headers.set("Authorization", "Bearer " + token);
+		HttpEntity<String> entity = new HttpEntity<>(encodedRequestBody, headers);
 
-		RequestEntity<Void> requestEntity = new RequestEntity<>(headers, HttpMethod.GET, URI.create(url));
-		ResponseEntity<String> responseEntity = restTemplate.exchange(requestEntity, String.class);
-
-		if (responseEntity.getStatusCode().is2xxSuccessful()){
-			String json = responseEntity.getBody();
-			Gson gson = new Gson();
-			return gson.fromJson(json, UserInfo.class);
-		}
-
-		throw new RuntimeException("유저 정보 가져오는데 실패.");
-
+		RestTemplate restTemplate = new RestTemplate();
+		return restTemplate.exchange(SIGN_UP_URL, HttpMethod.POST, entity, String.class);
 	}
+
+	private User createUser(DamoaSignUpDto signUpRequestDto){
+		User user = User.builder()
+			.name(signUpRequestDto.userName())
+			.email(signUpRequestDto.email())
+			.signUpId(signUpRequestDto.id())
+			.password(passwordEncoder.encode(signUpRequestDto.password()))
+			.birthDate(passwordEncoder.encode(signUpRequestDto.birthDate()))
+			.identity(passwordEncoder.encode(signUpRequestDto.identity()))
+			.telecom(signUpRequestDto.telecom())
+			.phoneNo(signUpRequestDto.phoneNo())
+			.role(Role.ROLE_USER)
+			.build();
+		userRepository.save(user);
+		return user;
+	}
+
 
 }
