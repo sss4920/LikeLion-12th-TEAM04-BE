@@ -22,11 +22,17 @@ public enum Error {
 	VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "유효성 검사에 맞지 않습니다."),
 	PARAMETER_NOT_VALID_ERROR(HttpStatus.BAD_REQUEST, "파라미터가 적절치 않습니다."),
 	EXTENSION_NOT_VALID_ERROR(HttpStatus.BAD_REQUEST, "지원하지 않는 확장자입니다."),
+	EXIST_USER_ERROR(HttpStatus.BAD_REQUEST, "이미 회원가입이 되어있는 유저입니다."),
 
 	/**
 	 * 403 FORBIDDEN
 	 */
 	FORBIDDEN_ERROR(HttpStatus.FORBIDDEN, "해당 리소스에 접근할 권한이 없습니다."),
+
+	/**
+	 * 408 REQUEST TIME OUT
+	 */
+	REQUEST_TIME_OUT_ERROR(HttpStatus.REQUEST_TIMEOUT, "요청에 대해 타임아웃이 발생했습니다."),
 
 	/**
 	 * 500 INTERNAL SERVER ERROR

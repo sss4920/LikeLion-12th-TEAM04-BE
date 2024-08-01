@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -36,7 +38,8 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers("/login/oauth2/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/insurance/contract/**").permitAll()
                         .requestMatchers("/test").authenticated()
                         .anyRequest().authenticated()
                 )
@@ -62,5 +65,9 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+    @Bean
+    public PasswordEncoder passwordEncoder(){	//비밀번호 암호화를 할 수 있도록 인코더 객체를 빈으로 등록.
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder(); //실질적 패스워드 생성
     }
 }
