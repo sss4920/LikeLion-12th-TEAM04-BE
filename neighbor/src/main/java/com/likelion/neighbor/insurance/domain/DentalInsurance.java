@@ -39,7 +39,16 @@ public class DentalInsurance {
 
 	@Builder
 	private DentalInsurance(String insuranceName, String treatmentName, Long assuredPrice, String caution,
-		String site, String note) {
+							String site, String note) {
+		this.insuranceName = insuranceName;
+		this.treatmentName = treatmentName;
+		this.assuredPrice = assuredPrice;
+		this.caution = caution;
+		this.site = site;
+		this.note = note;
+	}
+
+	public void update(String insuranceName, String treatmentName, Long assuredPrice, String caution, String site, String note) {
 		this.insuranceName = insuranceName;
 		this.treatmentName = treatmentName;
 		this.assuredPrice = assuredPrice;
