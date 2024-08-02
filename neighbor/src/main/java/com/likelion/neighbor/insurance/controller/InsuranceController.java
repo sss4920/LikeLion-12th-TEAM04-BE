@@ -25,15 +25,16 @@ import lombok.extern.slf4j.Slf4j;
 public class InsuranceController {
 	private final InsuranceDamoaService insuranceDamoaService;
 
-	@PostMapping("/contract")
-	public BaseResponse<?> getMyInsuranceContract(@AuthenticationPrincipal String userId, @RequestParam("thirdPartyToken")String token) {
-		try	{
-			return BaseResponse.success(Success.GET_INSURANCE_SUCCESS, insuranceDamoaService.saveContractResult(userId, token));
-		}catch (Exception e){
-			log.info(e.getMessage());
-			return BaseResponse.error(Error.INTERNAL_SERVER_ERROR, "서버에 문의하세요.");
-		}
-	}
+	// @PostMapping("/contract")
+	// public BaseResponse<?> getMyInsuranceContract(@AuthenticationPrincipal String userId, @RequestParam("thirdPartyToken")String token) {
+	// 	try	{
+	// 		return BaseResponse.success(Success.GET_INSURANCE_SUCCESS, insuranceDamoaService.saveContractResult(userId, token));
+	// 	}catch (Exception e){
+	// 		log.info(e.getMessage());
+	// 		return BaseResponse.error(Error.INTERNAL_SERVER_ERROR, "서버에 문의하세요.");
+	// 	}
+	// }
+
 
 	@PostMapping("/contract/token")
 	public BaseResponse<?> publishDamoaAccessToken(){

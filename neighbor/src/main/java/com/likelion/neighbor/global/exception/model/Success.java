@@ -19,6 +19,7 @@ public enum Success {
 	MEMBER_UPDATE_SUCCESS(HttpStatus.OK, "유저 수정 성공"),
 	POST_DELETE_SUCCESS(HttpStatus.OK, "글 삭제 성공"),
 	MEMBER_DELETE_SUCCESS(HttpStatus.OK, "글 삭제 성공"),
+	EXIST_USER_LOGIN(HttpStatus.OK, "이미 회원가입이 되어있는 유저입니다."),
 
 	/**
 	 * 201 CREATED
