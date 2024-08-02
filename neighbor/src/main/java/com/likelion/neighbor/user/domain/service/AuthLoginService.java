@@ -18,11 +18,13 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion.neighbor.global.exception.NotFoundException;
+
 import com.likelion.neighbor.global.exception.model.BaseResponse;
 import com.likelion.neighbor.global.exception.model.Error;
 import com.likelion.neighbor.global.exception.model.Success;
 import com.likelion.neighbor.global.jwt.TokenProvider;
 import com.likelion.neighbor.insurance.controller.dto.request.InsuranceRequestDto;
+
 import com.likelion.neighbor.insurance.service.InsuranceDamoaService;
 import com.likelion.neighbor.user.domain.Role;
 import com.likelion.neighbor.user.domain.Status;
@@ -57,6 +59,7 @@ public class AuthLoginService {
 		 NeedToSecondaryDto signUpSuccess = signUpForDamoaService(token, signUpRequestDto);
 		 if (signUpSuccess.result().code().equals("CF-03002")){
 			 return BaseResponse.success(Success.GET_INSURANCE_SUCCESS, signUpSuccess.data());
+
 		 }
 		 if (signUpSuccess!=null){ // 회원가입 2차인증을 이미 완료하고 요청하는 경우.
 			 User user = createUser(signUpRequestDto);
@@ -66,6 +69,7 @@ public class AuthLoginService {
 	}
 	@Transactional
 	public BaseResponse<?> twoWaySignUp(String token, DamoaSignUpDto twoWayRequestDto) throws Exception {
+
 		ObjectMapper objectMapper = new ObjectMapper();
 
 		Map<String, Object> encryptedPasswordAndIdentityAndPrivateKeyByRSA = getEncryptedData(twoWayRequestDto);
@@ -73,6 +77,7 @@ public class AuthLoginService {
 			return null;
 		}
 		SignUpRequestDto encryptSignUpDto = (SignUpRequestDto)createSignUpRequestDto(encryptedPasswordAndIdentityAndPrivateKeyByRSA, twoWayRequestDto, Status.TWO_WAY);
+
 
 		String encodedData = encodeRequestBody(encryptSignUpDto);
 
@@ -93,6 +98,7 @@ public class AuthLoginService {
 		User user = createUser(twoWayRequestDto);
 		insuranceDamoaService.saveContractResult((InsuranceRequestDto)createSignUpRequestDto(encryptedPasswordAndIdentityAndPrivateKeyByRSA, twoWayRequestDto, Status.CONTRACT_SAVE),user,token);
 		return BaseResponse.success(Success.MEMBER_SAVE_SUCCESS, tokenProvider.createToken(user));
+
 	}
 
 	public NeedToSecondaryDto signUpForDamoaService(String token, DamoaSignUpDto damoaSignUpDto) throws UnsupportedEncodingException, JsonProcessingException {

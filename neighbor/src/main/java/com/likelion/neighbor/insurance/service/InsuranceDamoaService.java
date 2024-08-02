@@ -20,6 +20,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.security.config.authentication.PasswordEncoderParser;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,12 +32,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion.neighbor.contract.domain.ContractInformation;
 import com.likelion.neighbor.contract.domain.repository.ContractInformationRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+
 import com.likelion.neighbor.insurance.controller.dto.request.InsuranceRequestDto;
 import com.likelion.neighbor.insurance.controller.dto.response.ContractBaseResponse;
 import com.likelion.neighbor.insurance.controller.dto.response.ResActualLossContract;
 import com.likelion.neighbor.user.domain.User;
 import com.likelion.neighbor.user.domain.controller.dto.request.DamoaSignUpDto;
 import com.likelion.neighbor.user.domain.controller.dto.request.SignUpRequestDto;
+
 import com.likelion.neighbor.user.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -66,6 +72,7 @@ public class InsuranceDamoaService {
 	public void saveContractResult(InsuranceRequestDto damoaSignUpDto,User user, String token) throws Exception {
 		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(CONTRACT_URL);
 
+
 		RestTemplate restTemplate = new RestTemplate();
 		ObjectMapper objectMapper = new ObjectMapper();
 
@@ -82,6 +89,7 @@ public class InsuranceDamoaService {
 		// 	.telecom(user.getTelecom())
 		// 	.build();
 
+
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Content-Type", "application/x-www-form-urlencoded");
 		headers.set("Authorization", "Bearer "+token);
@@ -89,6 +97,7 @@ public class InsuranceDamoaService {
 		String jsonRequestBody;
 		try {
 			jsonRequestBody = objectMapper.writeValueAsString(damoaSignUpDto);
+
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to convert DTO to JSON", e);
 		}

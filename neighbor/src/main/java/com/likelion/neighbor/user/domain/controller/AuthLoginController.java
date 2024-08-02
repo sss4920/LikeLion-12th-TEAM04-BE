@@ -46,6 +46,7 @@ public class AuthLoginController {
 	@PostMapping("/sign-up/two-way")
 	public BaseResponse<?> signUpByTwoWayAuthentification(@RequestParam("thirdPartyToken")String token, @RequestBody DamoaSignUpDto twoWayRequestDto) throws
 		Exception {
+
 		return authLoginService.twoWaySignUp(token, twoWayRequestDto);
 	}
 

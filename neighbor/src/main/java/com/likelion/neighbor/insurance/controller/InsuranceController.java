@@ -35,6 +35,7 @@ public class InsuranceController {
 	// 	}
 	// }
 
+
 	@PostMapping("/contract/token")
 	public BaseResponse<?> publishDamoaAccessToken(){
 		return BaseResponse.success(Success.INSURANCE_TOKEN_GENERATED_SUCCESS, insuranceDamoaService.publishAccessToken());
