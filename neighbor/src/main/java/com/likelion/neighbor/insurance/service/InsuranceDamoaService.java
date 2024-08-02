@@ -20,24 +20,21 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.config.authentication.PasswordEncoderParser;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.likelion.neighbor.global.exception.NotFoundException;
-import com.likelion.neighbor.global.exception.model.BaseResponse;
-import com.likelion.neighbor.global.exception.model.Error;
-import com.likelion.neighbor.global.exception.model.Success;
+import com.likelion.neighbor.contract.domain.ContractInformation;
+import com.likelion.neighbor.contract.domain.repository.ContractInformationRepository;
 import com.likelion.neighbor.insurance.controller.dto.request.InsuranceRequestDto;
 import com.likelion.neighbor.insurance.controller.dto.response.ContractBaseResponse;
 import com.likelion.neighbor.insurance.controller.dto.response.ResActualLossContract;
 import com.likelion.neighbor.user.domain.User;
+import com.likelion.neighbor.user.domain.controller.dto.request.DamoaSignUpDto;
+import com.likelion.neighbor.user.domain.controller.dto.request.SignUpRequestDto;
 import com.likelion.neighbor.user.domain.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -62,29 +59,28 @@ public class InsuranceDamoaService {
 
 	private final PasswordEncoder passwordEncoder;
 
+	private final ContractInformationRepository contractInformationRepository;
+
 //TODO: 암호화가져오는 부분 bcrypt하기전 회원가입하면 비동기로 돌리게끔 fix.
 	@Transactional
-	public BaseResponse<?> saveContractResult(String userId, String token) throws Exception {
+	public void saveContractResult(InsuranceRequestDto damoaSignUpDto,User user, String token) throws Exception {
 		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(CONTRACT_URL);
-		User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(
-			() -> new NotFoundException(Error.MEMBERS_NOT_FOUND_EXCEPTION, Error.MEMBERS_NOT_FOUND_EXCEPTION.getMessage())
-		);
 
 		RestTemplate restTemplate = new RestTemplate();
 		ObjectMapper objectMapper = new ObjectMapper();
 
-		Map<String, Object> res = getEncryptedPasswordByRSA(user.getPassword(), user.getIdentity());
-		InsuranceRequestDto insuranceRequestDto = InsuranceRequestDto.builder()
-			.organization("0001")
-			.id(user.getSignUpId())
-			.password((String)res.get("encryptedPassword"))
-			.identity((String)res.get("identity"))
-			.type("0")
-			.userName(user.getName())
-			.phoneNo(user.getPhoneNo())
-			.birthDate(user.getBirthDate())
-			.telecom(user.getTelecom())
-			.build();
+		// Map<String, Object> res = getEncryptedPasswordByRSA(damoaSignUpDto.password(), damoaSignUpDto.identity());
+		// InsuranceRequestDto insuranceRequestDto = InsuranceRequestDto.builder()
+		// 	.organization("0001")
+		// 	.id(user.getSignUpId())
+		// 	.password((String)res.get("encryptedPassword"))
+		// 	.identity((String)res.get("identity"))
+		// 	.type("0")
+		// 	.userName(user.getName())
+		// 	.phoneNo(user.getPhoneNo())
+		// 	.birthDate(user.getBirthDate())
+		// 	.telecom(user.getTelecom())
+		// 	.build();
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.set("Content-Type", "application/x-www-form-urlencoded");
@@ -92,7 +88,7 @@ public class InsuranceDamoaService {
 
 		String jsonRequestBody;
 		try {
-			jsonRequestBody = objectMapper.writeValueAsString(insuranceRequestDto);
+			jsonRequestBody = objectMapper.writeValueAsString(damoaSignUpDto);
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to convert DTO to JSON", e);
 		}
@@ -112,9 +108,18 @@ public class InsuranceDamoaService {
 		System.out.println("JSON Result: " + resActualLossContractList.toString());
 
 		//TODO: 결과 저장하는 엔티티 만들어서 저장하기.
-
-		return BaseResponse.success(Success.GET_INSURANCE_SUCCESS, resActualLossContractList);
-
+		List<ContractInformation> contractInformations =  resActualLossContractList.stream().map(
+			(ResActualLossContract i) -> ContractInformation.builder()
+				.resCompanyNm(i.resCompanyNm())
+				.resInsuranceName(i.resInsuranceName())
+				.resInsuredPerson(i.resInsuredPerson())
+				.resHomePage(i.resHomePage())
+				.resPhoneNo(i.resPhoneNo())
+				.user(user)
+				.isDentalInsurance(i.resInsuranceName().contains("치아"))
+				.build()
+				).toList();
+		contractInformationRepository.saveAll(contractInformations);
 	}
 
 	public Map<String,Object> getEncryptedPasswordByRSA(String password, String identity) throws Exception {

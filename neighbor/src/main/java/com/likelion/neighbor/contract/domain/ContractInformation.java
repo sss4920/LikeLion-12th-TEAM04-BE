@@ -1,4 +1,4 @@
-package com.likelion.neighbor.contract;
+package com.likelion.neighbor.contract.domain;
 
 import com.likelion.neighbor.user.domain.User;
 
@@ -28,18 +28,18 @@ public class ContractInformation {
 	private String resHomePage; //보험사 홈페이지 url 근데 클릭해보니 안나옴;
 
 	private String resInsuredPerson; //피보험자 이름
-	private String resCoverageNameList; //치료해주는 리스트 ,로 구분
+	private boolean isDentalInsurance; //치아보험인지 아닌지
 	@ManyToOne
 	private User user;
 	@Builder
 	private ContractInformation(String resCompanyNm, String resInsuranceName, String resPhoneNo, String resHomePage,
-		String resInsuredPerson, String resCoverageNameList, User user) {
+		String resInsuredPerson, boolean isDentalInsurance, User user) {
 		this.resCompanyNm = resCompanyNm;
 		this.resInsuranceName = resInsuranceName;
 		this.resPhoneNo = resPhoneNo;
 		this.resHomePage = resHomePage;
 		this.resInsuredPerson = resInsuredPerson;
-		this.resCoverageNameList = resCoverageNameList;
+		this.isDentalInsurance = isDentalInsurance;
 		this.user = user;
 	}
 }
