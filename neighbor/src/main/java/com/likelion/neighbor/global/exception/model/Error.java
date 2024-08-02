@@ -10,13 +10,11 @@ import lombok.Getter;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public enum Error {
 
-
-
 	/**
 	 * 404 NOT FOUND
 	 */
-
 	MEMBERS_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 유저가 없습니다."),
+	INSURANCE_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 보험을 찾을 수 없습니다."), // 추가된 부분
 
 	/**
 	 * 400 BAD REQUEST
