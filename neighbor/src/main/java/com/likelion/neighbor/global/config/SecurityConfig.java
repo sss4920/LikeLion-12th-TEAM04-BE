@@ -43,28 +43,28 @@ public class SecurityConfig {
                         .requestMatchers("/test").authenticated()
                         .anyRequest().authenticated()
                 )
-                .cors(cors -> cors.configurationSource(configurationSource()))
+                // .cors(cors -> cors.configurationSource(configurationSource()))
                 .addFilterBefore(new JwtFilter(tokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     // CORS 설정 정의 Bean
-    @Bean
-    public CorsConfigurationSource configurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Access-Control-Allow-Credentials", "Authorization", "Set-Cookie"));
-        configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
-
-        // URL 기반으로 CORS 설정 등록
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
-    }
+    // @Bean
+    // public CorsConfigurationSource configurationSource() {
+    //     CorsConfiguration configuration = new CorsConfiguration();
+    //     configuration.setAllowedOriginPatterns(List.of("*"));
+    //     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+    //     configuration.setAllowedHeaders(List.of("*"));
+    //     configuration.setExposedHeaders(List.of("Access-Control-Allow-Credentials", "Authorization", "Set-Cookie"));
+    //     configuration.setAllowCredentials(true);
+    //     configuration.setMaxAge(3600L);
+    //
+    //     // URL 기반으로 CORS 설정 등록
+    //     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    //     source.registerCorsConfiguration("/**", configuration);
+    //
+    //     return source;
+    // }
     @Bean
     public PasswordEncoder passwordEncoder(){	//비밀번호 암호화를 할 수 있도록 인코더 객체를 빈으로 등록.
         return PasswordEncoderFactories.createDelegatingPasswordEncoder(); //실질적 패스워드 생성
