@@ -22,7 +22,7 @@ public enum Error {
 	VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "유효성 검사에 맞지 않습니다."),
 	PARAMETER_NOT_VALID_ERROR(HttpStatus.BAD_REQUEST, "파라미터가 적절치 않습니다."),
 	EXTENSION_NOT_VALID_ERROR(HttpStatus.BAD_REQUEST, "지원하지 않는 확장자입니다."),
-	EXIST_USER_ERROR(HttpStatus.BAD_REQUEST, "이미 회원가입이 되어있는 유저입니다."),
+	EXIST_USER_ERROR(HttpStatus.BAD_REQUEST, "이미 네이보에 회원가입이 되어있는 유저입니다. 로그인을 해주세요."),
 
 	/**
 	 * 401 UNAUTHORIZED

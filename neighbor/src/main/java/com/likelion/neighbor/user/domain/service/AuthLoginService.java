@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.likelion.neighbor.contract.domain.repository.ContractInformationRepository;
 import com.likelion.neighbor.global.exception.BadRequestException;
 import com.likelion.neighbor.global.exception.NotFoundException;
 
@@ -50,6 +51,7 @@ public class AuthLoginService {
 
 	private final UserRepository userRepository;
 	private final InsuranceDamoaService insuranceDamoaService;
+	private final ContractInformationRepository contractInformationRepository;
 	private final TokenProvider tokenProvider;
 	private final PasswordEncoder passwordEncoder;
 
@@ -68,10 +70,12 @@ public class AuthLoginService {
 
 	@Transactional
 	public BaseResponse<?> signUp(String token, DamoaSignUpDto signUpRequestDto) throws UnsupportedEncodingException, JsonProcessingException {
-
+		 if (userRepository.findByEmail(signUpRequestDto.email()).isPresent()){
+			 return BaseResponse.error(Error.EXIST_USER_ERROR, Error.EXIST_USER_ERROR.getMessage());
+		 }
 		 NeedToSecondaryDto signUpSuccess = signUpForDamoaService(token, signUpRequestDto);
 		 if (signUpSuccess.result().code().equals("CF-03002")){
-			 return BaseResponse.success(Success.GET_INSURANCE_SUCCESS, signUpSuccess.data());
+			 return BaseResponse.success(Success.SIGN_UP_TWO_WAY_NEED, signUpSuccess.data());
 
 		 }
 		 if (signUpSuccess!=null){ // 회원가입 2차인증을 이미 완료하고 요청하는 경우.
@@ -103,13 +107,15 @@ public class AuthLoginService {
 		if (jsonNode.result().code().equals("CF-01004")){
 			return BaseResponse.error(Error.REQUEST_TIME_OUT_ERROR, Error.REQUEST_TIME_OUT_ERROR.getMessage());
 		}
-		if(jsonNode.result().code().equals("CF-12069")){
-			User user = userRepository.findByEmail(twoWayRequestDto.email()).orElse(createUser(twoWayRequestDto)); // 유저가 우리 서비스에 없으면 새로 만듬.
-			insuranceDamoaService.saveContractResult((InsuranceRequestDto)createSignUpRequestDto(encryptedPasswordAndIdentityAndPrivateKeyByRSA, twoWayRequestDto, Status.CONTRACT_SAVE),user,token); //배포하면 없애기
+		User user = userRepository.findByEmail(twoWayRequestDto.email()).orElseGet(()->createUser(twoWayRequestDto)); // 유저가 우리 서비스에 없으면 새로 만듬.
+		if (contractInformationRepository.findAllByUser(user).isEmpty()){ // 유저는 있는데 계약된 보험 정보가 없으면 혹시 모르니 업데이트.
+			insuranceDamoaService.saveContractResult((InsuranceRequestDto)createSignUpRequestDto(encryptedPasswordAndIdentityAndPrivateKeyByRSA, twoWayRequestDto, Status.CONTRACT_SAVE),user,token);
+		}
+		if(jsonNode.result().code().equals("CF-12069")){ //기존에 다모여 가입했었으면 이미 존재하는 애 토큰
+			//insuranceDamoaService.saveContractResult((InsuranceRequestDto)createSignUpRequestDto(encryptedPasswordAndIdentityAndPrivateKeyByRSA, twoWayRequestDto, Status.CONTRACT_SAVE),user,token); //배포하면 없애기
 			return BaseResponse.success(Success.EXIST_USER_LOGIN, tokenProvider.createToken(user));
 		}
-		User user = createUser(twoWayRequestDto);
-		insuranceDamoaService.saveContractResult((InsuranceRequestDto)createSignUpRequestDto(encryptedPasswordAndIdentityAndPrivateKeyByRSA, twoWayRequestDto, Status.CONTRACT_SAVE),user,token);
+
 		return BaseResponse.success(Success.MEMBER_SAVE_SUCCESS, tokenProvider.createToken(user));
 
 	}
@@ -175,7 +181,6 @@ public class AuthLoginService {
 				// 첫 번째 요청에 대한 추가 설정이 필요하면 여기에 추가
 							builder
 								.email(damoaSignUpDto.email());
-
 			}
 		}
 		return builder.build();
