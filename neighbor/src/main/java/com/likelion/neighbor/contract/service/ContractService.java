@@ -35,6 +35,16 @@ public class ContractService {
 			.toList();
 	}
 
+	public List<ContractResponseDto> getSimpleInformationList(String userId){
+		User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(
+			() -> new NotFoundException(Error.MEMBERS_NOT_FOUND_EXCEPTION, Error.MEMBERS_NOT_FOUND_EXCEPTION.getMessage())
+		);
+		return contractInformationRepository.findAllByUser(user)
+			.stream()
+			.map((ContractResponseDto::makeSimleResponse))
+			.toList();
+	}
+
 
 
 }

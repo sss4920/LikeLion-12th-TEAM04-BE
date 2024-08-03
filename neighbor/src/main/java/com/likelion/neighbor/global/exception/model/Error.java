@@ -25,6 +25,11 @@ public enum Error {
 	EXIST_USER_ERROR(HttpStatus.BAD_REQUEST, "이미 회원가입이 되어있는 유저입니다."),
 
 	/**
+	 * 401 UNAUTHORIZED
+	 */
+	PASSWORD_MISMATCH(HttpStatus.UNAUTHORIZED, "패스워드가 일치하지않습니다."),
+
+	/**
 	 * 403 FORBIDDEN
 	 */
 	FORBIDDEN_ERROR(HttpStatus.FORBIDDEN, "해당 리소스에 접근할 권한이 없습니다."),

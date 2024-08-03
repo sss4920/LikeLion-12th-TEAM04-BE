@@ -17,6 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.likelion.neighbor.global.exception.BadRequestException;
 import com.likelion.neighbor.global.exception.NotFoundException;
 
 import com.likelion.neighbor.global.exception.model.BaseResponse;
@@ -30,6 +31,7 @@ import com.likelion.neighbor.user.domain.Role;
 import com.likelion.neighbor.user.domain.Status;
 import com.likelion.neighbor.user.domain.User;
 import com.likelion.neighbor.user.domain.controller.dto.request.DamoaSignUpDto;
+import com.likelion.neighbor.user.domain.controller.dto.request.NeighborLoginDto;
 import com.likelion.neighbor.user.domain.controller.dto.request.SignUpRequestDto;
 import com.likelion.neighbor.user.domain.controller.dto.request.TwoWayRequestDto;
 import com.likelion.neighbor.user.domain.controller.dto.response.NeedToSecondaryDto;
@@ -51,6 +53,17 @@ public class AuthLoginService {
 	private final TokenProvider tokenProvider;
 	private final PasswordEncoder passwordEncoder;
 
+
+	@Transactional
+	public BaseResponse<?> login(NeighborLoginDto loginDto){
+		User customer = userRepository.findBySignUpId(loginDto.id()).orElseThrow(
+			() -> new NotFoundException(Error.MEMBERS_NOT_FOUND_EXCEPTION, "회원가입이 먼저 필요합니다.")
+		);
+		if (!passwordEncoder.matches(loginDto.password(), customer.getPassword())){
+			return BaseResponse.error(Error.PASSWORD_MISMATCH, Error.PASSWORD_MISMATCH.getMessage());
+		}
+		return BaseResponse.success(Success.LOGIN_SUCCESS, tokenProvider.createToken(customer));
+	}
 
 
 	@Transactional

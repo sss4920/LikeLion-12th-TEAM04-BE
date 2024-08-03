@@ -14,6 +14,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.likelion.neighbor.global.dto.Token;
 import com.likelion.neighbor.global.exception.model.BaseResponse;
 import com.likelion.neighbor.user.domain.controller.dto.request.DamoaSignUpDto;
+import com.likelion.neighbor.user.domain.controller.dto.request.NeighborLoginDto;
 import com.likelion.neighbor.user.domain.controller.dto.request.SignUpRequestDto;
 import com.likelion.neighbor.user.domain.controller.dto.request.TwoWayRequestDto;
 import com.likelion.neighbor.user.domain.service.AuthLoginService;
@@ -48,6 +49,11 @@ public class AuthLoginController {
 		Exception {
 
 		return authLoginService.twoWaySignUp(token, twoWayRequestDto);
+	}
+
+	@PostMapping("/login")
+	public BaseResponse<?> login(@RequestBody NeighborLoginDto loginDto){
+		return authLoginService.login(loginDto);
 	}
 
 }
