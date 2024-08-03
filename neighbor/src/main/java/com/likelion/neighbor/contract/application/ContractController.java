@@ -32,4 +32,10 @@ public class ContractController {
 		List<ContractResponseDto> contractResponseList = contractService.getSimpleInformationList(userId);
 		return BaseResponse.success(Success.GET_INSURANCE_SUCCESS, contractResponseList);
 	}
+
+	@GetMapping("/simple/recommand")
+	public BaseResponse<?> recommandContractItemByUser(@AuthenticationPrincipal String userId){
+		List<ContractResponseDto> contractResponseList = contractService.recommandContract(userId);
+		return BaseResponse.success(Success.GET_INSURANCE_SUCCESS, contractResponseList);
+	}
 }
