@@ -1,6 +1,8 @@
 package com.likelion.neighbor.contract.service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -25,9 +27,7 @@ public class ContractService {
 	private final UserRepository userRepository;
 
 	public List<ContractResponseDto> getContractInformationList(String userId){
-		User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(
-			() -> new NotFoundException(Error.MEMBERS_NOT_FOUND_EXCEPTION, Error.MEMBERS_NOT_FOUND_EXCEPTION.getMessage())
-		);
+		User user = findUser(userId);
 
 		return contractInformationRepository.findAllByUser(user)
 			.stream()
@@ -36,13 +36,28 @@ public class ContractService {
 	}
 
 	public List<ContractResponseDto> getSimpleInformationList(String userId){
-		User user = userRepository.findById(Long.valueOf(userId)).orElseThrow(
-			() -> new NotFoundException(Error.MEMBERS_NOT_FOUND_EXCEPTION, Error.MEMBERS_NOT_FOUND_EXCEPTION.getMessage())
-		);
+		User user = findUser(userId);
 		return contractInformationRepository.findAllByUser(user)
 			.stream()
 			.map((ContractResponseDto::makeSimleResponse))
 			.toList();
+	}
+
+	public List<ContractResponseDto> recommandContract(String userId){
+		User user = findUser(userId);
+		List<ContractInformation> contractInformationList =  contractInformationRepository.findAllByUserNot(user);
+		Collections.shuffle(contractInformationList, new Random());
+
+		return contractInformationList.stream()
+			.limit(3)
+			.map((ContractResponseDto::makeSimleResponse))
+			.toList();
+	}
+
+	private User findUser(String userId){
+		return userRepository.findById(Long.valueOf(userId)).orElseThrow(
+			() -> new NotFoundException(Error.MEMBERS_NOT_FOUND_EXCEPTION, Error.MEMBERS_NOT_FOUND_EXCEPTION.getMessage())
+		);
 	}
 
 
