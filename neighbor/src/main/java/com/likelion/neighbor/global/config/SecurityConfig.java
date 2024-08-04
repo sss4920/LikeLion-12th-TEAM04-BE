@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/insurance/contract/**").permitAll()
+                        .requestMatchers("/api/v1/contract/**").permitAll()
                         .requestMatchers("/test").authenticated()
                         .anyRequest().authenticated()
                 )
