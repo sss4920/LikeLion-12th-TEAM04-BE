@@ -44,8 +44,8 @@ public class AuthLoginController {
 	public BaseResponse<?> signup(@RequestParam("thirdPartyToken")String token, @RequestBody DamoaSignUpDto signUpRequestDto) throws
 		UnsupportedEncodingException,
 		JsonProcessingException {
-		String decode = URLDecoder.decode(token, StandardCharsets.UTF_8);
-		return authLoginService.signUp(decode, signUpRequestDto);
+		// String decode = URLDecoder.decode(token, StandardCharsets.UTF_8);
+		return authLoginService.signUp(token, signUpRequestDto);
 	}
 
 	@PostMapping("/sign-up/two-way")
