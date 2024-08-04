@@ -1,7 +1,10 @@
 package com.likelion.neighbor.user.domain.controller;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,7 +44,8 @@ public class AuthLoginController {
 	public BaseResponse<?> signup(@RequestParam("thirdPartyToken")String token, @RequestBody DamoaSignUpDto signUpRequestDto) throws
 		UnsupportedEncodingException,
 		JsonProcessingException {
-		return authLoginService.signUp(token, signUpRequestDto);
+		String decode = URLDecoder.decode(token, StandardCharsets.UTF_8);
+		return authLoginService.signUp(decode, signUpRequestDto);
 	}
 
 	@PostMapping("/sign-up/two-way")
