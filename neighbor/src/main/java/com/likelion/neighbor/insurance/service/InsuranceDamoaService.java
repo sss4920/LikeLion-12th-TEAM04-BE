@@ -114,21 +114,23 @@ public class InsuranceDamoaService {
 
 		// 결과 출력
 		System.out.println("Decoded Response: " + decodedResponse);
-		System.out.println("JSON Result: " + resActualLossContractList.toString());
-
-		//TODO: 결과 저장하는 엔티티 만들어서 저장하기.
-		List<ContractInformation> contractInformations =  resActualLossContractList.stream().map(
-			(ResActualLossContract i) -> ContractInformation.builder()
-				.resCompanyNm(i.resCompanyNm())
-				.resInsuranceName(i.resInsuranceName())
-				.resInsuredPerson(i.resInsuredPerson())
-				.resHomePage(i.resHomePage())
-				.resPhoneNo(i.resPhoneNo())
-				.user(user)
-				.isDentalInsurance(i.resInsuranceName().contains("치아"))
-				.build()
-				).toList();
-		contractInformationRepository.saveAll(contractInformations);
+		System.out.println("저장할 실손 보험이 없다.");
+		if (resActualLossContractList!=null) {
+			//TODO: 결과 저장하는 엔티티 만들어서 저장하기.
+			List<ContractInformation> contractInformations = resActualLossContractList.stream().map(
+				(ResActualLossContract i) -> ContractInformation.builder()
+					.resCompanyNm(i.resCompanyNm())
+					.resInsuranceName(i.resInsuranceName())
+					.resInsuredPerson(i.resInsuredPerson())
+					.resHomePage(i.resHomePage())
+					.resPhoneNo(i.resPhoneNo())
+					.user(user)
+					.isDentalInsurance(i.resInsuranceName().contains("치아"))
+					.build()
+			).toList();
+			System.out.println("저장까지 왔다.");
+			contractInformationRepository.saveAll(contractInformations);
+		}
 	}
 
 	public Map<String,Object> getEncryptedPasswordByRSA(String password, String identity) throws Exception {
