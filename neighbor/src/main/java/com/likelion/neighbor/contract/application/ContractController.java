@@ -33,7 +33,7 @@ public class ContractController {
 		return BaseResponse.success(Success.GET_INSURANCE_SUCCESS, contractResponseList);
 	}
 
-	@GetMapping("/simple/recommand")
+	@GetMapping("/random")
 	public BaseResponse<?> recommandContractItemByUser(@AuthenticationPrincipal String userId){
 		List<ContractResponseDto> contractResponseList = contractService.recommandContract(userId);
 		return BaseResponse.success(Success.GET_INSURANCE_SUCCESS, contractResponseList);
