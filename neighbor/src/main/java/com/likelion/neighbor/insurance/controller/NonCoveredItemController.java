@@ -1,6 +1,7 @@
 package com.likelion.neighbor.insurance.controller;
 
 import com.likelion.neighbor.contract.domain.NonCoveredItem;
+import com.likelion.neighbor.global.exception.model.BaseResponse;
 import com.likelion.neighbor.insurance.service.NonCoveredItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,7 +29,7 @@ public class NonCoveredItemController {
     }
 
     @GetMapping("/check/shortName")
-    public boolean checkByShortName(@RequestParam String shortName,  @AuthenticationPrincipal String userId) {
+    public BaseResponse<Boolean> checkByShortName(@RequestParam String shortName,  @AuthenticationPrincipal String userId) {
         return nonCoveredItemService.existsByShortName(shortName, userId);
     }
 

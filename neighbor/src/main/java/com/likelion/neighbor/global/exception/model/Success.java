@@ -17,6 +17,7 @@ public enum Success {
 	GET_INSURANCE_SUCCESS(HttpStatus.OK, "내가 계약한 보험 찾기 성공"),
 	RECOMMEND_ITEM_SUCCESS(HttpStatus.OK, "보험 상품 추천 3개 성공"),
 	GET_SIMPLE_CONTRACT_SUCCESS(HttpStatus.OK, "내가 계약한 보험 리스트 간단한거 찾기 성공"),
+	SEARCH_SUCCESS(HttpStatus.OK, "검색 성공"),
 	POST_UPDATE_SUCCESS(HttpStatus.OK, "게시물 수정 성공"),
 	MEMBER_UPDATE_SUCCESS(HttpStatus.OK, "유저 수정 성공"),
 	POST_DELETE_SUCCESS(HttpStatus.OK, "글 삭제 성공"),

@@ -2,7 +2,9 @@ package com.likelion.neighbor.insurance.service;
 
 import com.likelion.neighbor.contract.domain.NonCoveredItem;
 import com.likelion.neighbor.global.exception.NotFoundException;
+import com.likelion.neighbor.global.exception.model.BaseResponse;
 import com.likelion.neighbor.global.exception.model.Error;
+import com.likelion.neighbor.global.exception.model.Success;
 import com.likelion.neighbor.insurance.domain.repository.NonCoveredItemRepository;
 import com.likelion.neighbor.user.domain.User;
 import com.likelion.neighbor.user.domain.repository.UserRepository;
@@ -33,9 +35,9 @@ public class NonCoveredItemService {
         return nonCoveredItemRepository.existsByMiddleName(middleName);
     }
 
-    public boolean existsByShortName(String shortName, String userId) {
+    public BaseResponse<Boolean> existsByShortName(String shortName, String userId) {
         hasUserPermission(userId);
-        return nonCoveredItemRepository.existsByShortName(shortName) || nonCoveredItemRepository.existsByMiddleName(shortName);
+        return BaseResponse.success(Success.SEARCH_SUCCESS, nonCoveredItemRepository.existsByShortName(shortName) || nonCoveredItemRepository.existsByMiddleName(shortName));
     }
 
     public NonCoveredItem addNonCoveredItem(String middleName, String shortName, String userId) {
