@@ -74,9 +74,27 @@ public class AuthLoginService {
 			 return BaseResponse.error(Error.EXIST_USER_ERROR, Error.EXIST_USER_ERROR.getMessage());
 		 }
 		 NeedToSecondaryDto signUpSuccess = signUpForDamoaService(token, signUpRequestDto);
-		 if (signUpSuccess.result().code().equals("CF-03002")){
-			 return BaseResponse.success(Success.SIGN_UP_TWO_WAY_NEED, signUpSuccess.data());
-
+		 switch (signUpSuccess.result().code()){
+			 case "CF-03002":
+				 return BaseResponse.success(Success.SIGN_UP_TWO_WAY_NEED, signUpSuccess.data());
+			 case "CF-12102":
+				 return BaseResponse.error(Error.LOGIN_PARAMETER_NOT_FOUND_EXCEPTION, Error.LOGIN_PARAMETER_NOT_FOUND_EXCEPTION.getMessage());
+			 case "CF-12824":
+				 return BaseResponse.error(Error.ID_BAD_REQUEST, Error.ID_BAD_REQUEST.getMessage());
+			 case "CF-12825":
+				 return BaseResponse.error(Error.ID_FORM_BAD_REQUEST, Error.ID_FORM_BAD_REQUEST.getMessage());
+			 case "CF-13349":
+				 return BaseResponse.error(Error.ID_REGISTERED_BAD_REQUEST, Error.ID_REGISTERED_BAD_REQUEST.getMessage());
+			 case "CF-12826":
+				 return BaseResponse.error(Error.ID_FORM_BAD_REQUEST, Error.ID_FORM_BAD_REQUEST.getMessage());
+			 case "CF-12827":
+				 return BaseResponse.error(Error.PASSWORD_FORM_BAD_REQUEST, Error.PASSWORD_FORM_BAD_REQUEST.getMessage());
+			 case "CF-13341":
+				 return BaseResponse.error(Error.EMAIL_BAD_REQUEST, Error.EMAIL_BAD_REQUEST.getMessage());
+			 case "CF-13342":
+				 return BaseResponse.error(Error.EMAIL_FORM_BAD_REQUEST, Error.EMAIL_FORM_BAD_REQUEST.getMessage());
+			 case "CF-13343":
+				 return BaseResponse.error(Error.EMAIL_IS_NOT_VALID_REQUEST, Error.EMAIL_IS_NOT_VALID_REQUEST.getMessage());
 		 }
 		 if (signUpSuccess!=null){ // 회원가입 2차인증을 이미 완료하고 요청하는 경우.
 			 User user = createUser(signUpRequestDto);
