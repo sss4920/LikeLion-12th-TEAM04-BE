@@ -35,7 +35,7 @@ public class NonCoveredItemService {
 
     public boolean existsByShortName(String shortName, String userId) {
         hasUserPermission(userId);
-        return nonCoveredItemRepository.existsByShortName(shortName);
+        return nonCoveredItemRepository.existsByShortName(shortName) || nonCoveredItemRepository.existsByMiddleName(shortName);
     }
 
     public NonCoveredItem addNonCoveredItem(String middleName, String shortName, String userId) {
