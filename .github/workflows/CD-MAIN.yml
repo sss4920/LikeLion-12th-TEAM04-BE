@@ -16,7 +16,7 @@ jobs:
           - docker.io
         include:
           - registry: ghcr.io
-            secret: ${{ secrets.GITHUB_TOKEN }}
+            secret: ${{ secrets.GIT_TOKEN }}
           - registry: docker.io
             secret: ${{ secrets.DOCKERHUB_LOGIN_ACCESSTOKEN }}
 
