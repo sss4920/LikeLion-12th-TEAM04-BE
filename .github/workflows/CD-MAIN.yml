@@ -1,4 +1,4 @@
-name: CI
+name: CD
 
 on:
   pull_request:
@@ -16,7 +16,7 @@ jobs:
 
     - name: Set up JDK 17
       uses: actions/setup-java@v3
-	      with:
+      with:
         distribution: 'corretto'
         java-version: '17'
 
@@ -61,7 +61,7 @@ jobs:
         username: ${{ secrets.RELEASE_SERVER_USER }}
         key: ${{ secrets.RELEASE_SERVER_KEY }}
         script: |
-					docker rm -f neighbor
-					docker image pull sss4920/neighbor
-					docker run -d --name neighbor-8080 -p 8080:8080 sss4920/neighbor
+		  docker rm -f neighbor
+	  	  docker image pull sss4920/neighbor
+	  	  docker run -d --name neighbor-8080 -p 8080:8080 sss4920/neighbor
 
