@@ -6,6 +6,8 @@ import com.likelion.neighbor.insurance.controller.dto.response.DentalInsuranceIn
 import com.likelion.neighbor.insurance.domain.DentalInsurance;
 import com.likelion.neighbor.insurance.service.DentalInsuranceService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/dental-insurances")
 public class DentalInsuranceController {
 
-    @Autowired
-    private DentalInsuranceService dentalInsuranceService;
+    private final DentalInsuranceService dentalInsuranceService;
 
     @GetMapping
     public ResponseEntity<DentalInsuranceInfoListResDto> getAllDentalInsurances() {
